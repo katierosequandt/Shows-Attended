@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+
+</style>
+
+<body>
+    
+    <div class="display-band"></div>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+var margin = {top: 20, right: 50, bottom: 20, left: 10};
+
+var w = 960 - margin.left - margin.right,
+        h = 200 - margin.top - margin.bottom;
+
+
+var svg = d3.select("body").append("svg")
+      .attr("width", w + margin.left + margin.right)
+      .attr("height", h + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+
+
+var xScale = d3.time.scale()
+     .range([0, w]);
+
+var parseDate = d3.time.format("%m/%d/%Y");
+
+
+
+var data = d3.tsv("all-show-data.tsv", ready);
+
+function ready(error, data) {
+    if (error) return console.warn(error);
+
+    data.forEach(function(d) {
+        d.date = parseDate.parse(d.date);
+    });
+  
+    // xScale.domain(data.map(function(d) {
+    //     return d.date;
+    // }));
+     
+    var mindate = parseDate.parse("1/1/2002");
+    var maxdate = parseDate.parse("12/31/2015");
+
+
+    xScale.domain([mindate, maxdate]);
+
+    var tooltip = d3.select(".display-band")
+        .style("position", "absolute")
+        .style("padding", "0 10px")
+        .style("background", "white")
+        .style("opacity", 0);
+
+
+
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
+
+
+
+    svg.append("g")
+            .attr("class", "rect-container")
+            .selectAll("rect")
+            .data(data)
+            .enter()
+        .append("rect")
+            .attr("y", h/2 - 5)
+            .attr("x", function(d) {
+                return xScale(d.date) + margin.left;
+            })
+            .attr("width", 2)
+            .attr("height", 10)
+            .attr("fill", "green")
+            .attr("City", function(d) {
+                return d.City;
+            })
+            .attr("Date", function(d) {
+                return xScale(d.date);
+            })
+            .on("mouseover", function(d) {
+                tooltip.transition()
+                    .style("opacity", .9);
+                tooltip.html("<strong>" + d.venue + " (" + d.city + "):</strong> " + d.band);
+            });
+    
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + margin.left + "," + h/2 + ")")
+        .call(xAxis);
+
+
+
+
+}
+
+</script>
